@@ -1,2 +1,3 @@
 *.ui
 guishka.py
+__pycache__/

@@ -1,13 +1,12 @@
 from bs4 import BeautifulSoup as BS
 import requests
 
-def get_MAF_info_from_dbSNP(rs_id):
+def get_MAF_info_from_dbSNP(rs_id, MAF_threshold):
     url = f"https://www.ncbi.nlm.nih.gov/snp/{rs_id}"
     # Page request and HTML analysis using BeautifulSoup
     with requests.Session() as s:
         response = s.get(url)
         soup = BS(response.text, "html.parser")
-        MAF_threshold = 0.3
         
         try: 
             info = soup.find_all("dd")[4]

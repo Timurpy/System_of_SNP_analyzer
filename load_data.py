@@ -1,6 +1,7 @@
 import pandas as pd
 import yaml
 
+# depricated
 def parse_from_config(config_path="config.yaml"):
     with open(config_path, "r") as f:
         config = yaml.safe_load(f)
@@ -32,13 +33,27 @@ def process_df_columns_ang_get_patient_list(df):
     df.columns = renamed_columns
     return unique_patients
 
-def get_aggregated_patient_data_from_excel(config_path="config.yaml"):
-    config = parse_from_config(config_path)
+def get_aggregated_patient_data_from_excel(path_to_input_file,
+                                           seq_threshhold_depth,
+                                           aggregation_method,
+                                           ):
+    # config = parse_from_config(config_path)
     
-    seq_threshhold_depth = config["seq_threshhold_depth"]
-    path_to_input_file = config["path_to_input_file"]
-    aggregation_method = config["aggregation_method"]
+    # seq_threshhold_depth = config["seq_threshhold_depth"]
+    # path_to_input_file = config["path_to_input_file"]
+    # aggregation_method = config["aggregation_method"]
+    if not isinstance(seq_threshhold_depth, int):
+        try:
+            seq_threshhold_depth = int(seq_threshhold_depth)
+        except ValueError:
+            print('AHTUNG!')
+            seq_threshhold_depth = 10
 
+    to_eng = {'Среднее': 'mean',
+              'Минимальное': 'min',
+              'Максимальное': 'max',
+    }
+    aggregation_method = to_eng[aggregation_method]
     # loading input excel table
     df = pd.read_excel(path_to_input_file, sheet_name=0)
     # preprocessing dataframe, casting it into convinience format for further analysis 
