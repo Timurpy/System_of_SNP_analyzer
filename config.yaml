@@ -1,4 +1,4 @@
 
 seq_threshhold_depth: 10
-path_to_input_file: "D:/Data/october_lep/input.xlsx"
-aggregation_method: 'mean'
+path_to_input_file: "C:/Users/Arekusei/Documents/snp_program/SNP_analyser/input.xlsx"
+aggregation_method: 'mean' # also 'min' and 'max' possible
