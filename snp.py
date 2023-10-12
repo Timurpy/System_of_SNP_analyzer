@@ -24,21 +24,28 @@ class ParsingThread(QtCore.QThread):
     def  __init__(self, 
                   patient_snp_list=None, 
                   snp_info_dictionary=None,
+                  snp_clinical_dictionary=None,
                   ):
         super().__init__()
         self.patient_snp_list = patient_snp_list
         self.snp_info_dictionary = snp_info_dictionary
+        self.snp_clinical_dictionary = snp_clinical_dictionary
         
     def run(self):
         for num, rs_id in enumerate(self.patient_snp_list):
             
             if rs_id in self.snp_info_dictionary.keys():
                 allele_data = self.snp_info_dictionary[rs_id]
-                final_clinical_info = None
+                final_clinical_info = self.snp_clinical_dictionary[rs_id]
             else:
                 allele_data, final_clinical_info = get_info_from_dbSNP(rs_id, MAF_threshold=0.0)
                 self.snp_info_dictionary[rs_id] = allele_data
-            self.mysignal.emit([num, rs_id, allele_data, final_clinical_info, self.snp_info_dictionary])
+                self.snp_clinical_dictionary[rs_id] = final_clinical_info
+            self.mysignal.emit([num, rs_id, 
+                                allele_data, 
+                                final_clinical_info, 
+                                self.snp_info_dictionary, 
+                                self.snp_clinical_dictionary])
             
 class ComboBoxWithReadOnlyMode(QComboBox):
     
@@ -69,7 +76,8 @@ class Ui_MainWindow(object):
 
         self.path_to_input_file = None
         self.snp_info_dictionary = {}
-        
+        self.snp_clinical_dictionary = {}
+
         self.centralwidget = QtWidgets.QWidget(MainWindow)
 
         self.label_agg = QtWidgets.QLabel(self.centralwidget)
@@ -218,11 +226,13 @@ class Ui_MainWindow(object):
 
         for rs_id in patient_snp_list:
             allele_data = self.snp_info_dictionary[rs_id]
+            final_clinical_info = self.snp_clinical_dictionary[rs_id]
 
             if len(allele_data) and float(allele_data[0].split()[0].split('=')[-1]) >= self.MAF_threshold:
                 mafs = [float(entry.split('=')[-1].split()[0]) for entry in allele_data]
                 mean_maf = round(sum(mafs)/len(mafs), 5)
-                self.allele_data_list.append((rs_id, f"average MAF = {mean_maf} (from {len(mafs)} sources)"))
+                if final_clinical_info is None: final_clinical_info = ''
+                self.allele_data_list.append((rs_id, f"average MAF = {mean_maf} from {len(mafs)} sources {final_clinical_info}"))
         data_to_print = [': '.join(snp_) for snp_ in self.allele_data_list]
         self.textEdit.setText('\n'.join(data_to_print))
        
@@ -275,7 +285,7 @@ class Ui_MainWindow(object):
             self.request_status.setText(f"parsing info on {patient_snp_list[0]} from dbSNP")
             
             
-            self.mythread = ParsingThread(patient_snp_list, self.snp_info_dictionary)    # Создаем экземпляр класса
+            self.mythread = ParsingThread(patient_snp_list, self.snp_info_dictionary, self.snp_clinical_dictionary)    # Создаем экземпляр класса
             # self.mythread.started.connect(self.on_started)
             self.mythread.finished.connect(self.on_finished)
             self.mythread.mysignal.connect(self.on_change, QtCore.Qt.QueuedConnection)
@@ -283,7 +293,7 @@ class Ui_MainWindow(object):
             self.file_browser_btn.setEnabled(False)
         
     def on_change(self, emmited_list):
-        num, rs_id, allele_data, final_clinical_info, updated_info_dictionary = emmited_list
+        num, rs_id, allele_data, final_clinical_info, updated_info_dictionary, updated_clinical_dictionary = emmited_list
         self.progress.setValue(num+1)
         self.request_status.setText(f"parsing info on {rs_id} from dbSNP")
         # self.request_status.adjustSize()
@@ -293,6 +303,7 @@ class Ui_MainWindow(object):
             if final_clinical_info is None: final_clinical_info = ''
             self.allele_data_list.append((rs_id, f"average MAF = {mean_maf} from {len(mafs)} sources {final_clinical_info}"))
         self.snp_info_dictionary = updated_info_dictionary
+        self.snp_clinical_dictionary = updated_clinical_dictionary
         
     def on_finished(self):      # Вызывается при завершении потока
         
