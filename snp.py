@@ -165,6 +165,7 @@ class Ui_MainWindow(object):
             self.pushButton.setEnabled(False)
     
     def updatedata(self):
+        self.combo.clear() 
         self.pushButton_update.setEnabled(False)
         self.load_input_file(self.path_to_input_file)
 
@@ -193,7 +194,7 @@ class Ui_MainWindow(object):
         self.df = df
         self.unique_patients = sorted(unique_patients, key=lambda x: int(x.split('_')[-1]))
         self.snp_info_dictionary = {}
-        self.combo.addItems(self.unique_patients)
+        self.combo.addItems (self.unique_patients) 
         self.pushButton.setEnabled(True)
         self.textEdit.setText(f'Загружены данные по пути:\n{path_to_input_file}')
 
