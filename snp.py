@@ -37,7 +37,7 @@ class ParsingThread(QtCore.QThread):
                 self.snp_info_dictionary[rs_id] = allele_data
             self.mysignal.emit([num, rs_id, allele_data, self.snp_info_dictionary])
             
-class ComboBoxWithBlock(QComboBox):
+class ComboBoxWithReadOnlyMode(QComboBox):
     
     def __init__(self, parent):
         QComboBox.__init__(self, parent)
@@ -65,14 +65,15 @@ class Ui_MainWindow(object):
         MainWindow.setFixedHeight(760)
 
         self.path_to_input_file = None
-
+        self.snp_info_dictionary = {}
+        
         self.centralwidget = QtWidgets.QWidget(MainWindow)
 
         self.label_agg = QtWidgets.QLabel(self.centralwidget)
         self.label_agg.setGeometry(QtCore.QRect(195, 58, 350, 20))
         self.label_agg.setText(f"Выберите способ агрегации данных")
 
-        self.combo_agg = ComboBoxWithBlock(self.centralwidget)
+        self.combo_agg = ComboBoxWithReadOnlyMode(self.centralwidget)
         self.combo_agg.addItems(['Среднее', 'Минимальное', 'Максимальное'])
         self.combo_agg.move(250, 80)
         self.combo_agg.resize(100, 20)
@@ -143,7 +144,7 @@ class Ui_MainWindow(object):
         self.label_select_patient.setGeometry(202, 130, 500, 20)
         self.label_select_patient.setText(f"Выберите пациента для анализа")
 
-        self.combo = ComboBoxWithBlock(self.centralwidget)
+        self.combo = ComboBoxWithReadOnlyMode(self.centralwidget)
         self.combo.move(200, 155)
         self.combo.resize(200, 25)
         self.combo.currentTextChanged.connect(lambda x: self.pushButton_maf.setEnabled(False))
@@ -179,7 +180,9 @@ class Ui_MainWindow(object):
             self.load_input_file(self.path_to_input_file)
 
     def load_input_file(self, path_to_input_file):
-
+        
+        self.combo.clear() 
+        
         try:
             seq_threshhold_depth = float(self.lineEdit_depth.text())
         except ValueError:
@@ -193,7 +196,6 @@ class Ui_MainWindow(object):
                                                                      )
         self.df = df
         self.unique_patients = sorted(unique_patients, key=lambda x: int(x.split('_')[-1]))
-        self.snp_info_dictionary = {}
         self.combo.addItems (self.unique_patients) 
         self.pushButton.setEnabled(True)
         self.textEdit.setText(f'Загружены данные по пути:\n{path_to_input_file}')
