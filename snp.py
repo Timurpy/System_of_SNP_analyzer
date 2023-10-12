@@ -34,6 +34,7 @@ class ParsingThread(QtCore.QThread):
             
             if rs_id in self.snp_info_dictionary.keys():
                 allele_data = self.snp_info_dictionary[rs_id]
+                final_clinical_info = None
             else:
                 allele_data, final_clinical_info = get_info_from_dbSNP(rs_id, MAF_threshold=0.0)
                 self.snp_info_dictionary[rs_id] = allele_data
